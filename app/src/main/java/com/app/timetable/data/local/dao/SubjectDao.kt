@@ -1,11 +1,13 @@
 package com.app.timetable.data.local.dao
 
+import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import com.app.timetable.data.local.entity.Subject
 import kotlinx.coroutines.flow.Flow
 
+@Dao
 interface SubjectDao {
     @Upsert
     suspend fun upsertSubject(subject: Subject)
