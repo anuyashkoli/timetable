@@ -10,4 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface TaskDao {
     @Query("SELECT * FROM taskTable WHERE isCompleted = 0 ORDER BY priority ASC ") // Ascending; 1 is High and 5 is Low
     fun dueHighPriorityTasks(): Flow<List<Task>>
+
+    @Query("SELECT * FROM taskTable WHERE isCompleted = 0 ORDER BY priority ASC") // Query to get all incomplete tasks for scheduling
+    fun getIncompleteTasks(): Flow<List<Task>>
 }
