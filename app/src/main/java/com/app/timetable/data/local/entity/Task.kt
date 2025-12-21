@@ -11,5 +11,6 @@ data class Task (
     val priority: Int,
     val deadline: Long,
     val isCompleted: Boolean,
-    val duration: String
+    val duration: Long,
+    val moduleName: String
 )
