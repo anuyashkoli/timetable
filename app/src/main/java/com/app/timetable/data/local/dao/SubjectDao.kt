@@ -16,6 +16,6 @@ interface SubjectDao {
     @Query("SELECT * FROM subjectTable ORDER BY priority ASC")
     fun getAllSubjects(): Flow<List<Subject>>
 
-    @Query("SELECT * FROM subjectTable WHERE subjectID = 'subjectID'")
-    fun getSubjectByID(subjectID: Int): Flow<List<Subject>>
+    @Query("SELECT * FROM subjectTable WHERE subjectID = :subjectID")
+    fun getSubjectByID(subjectID: Int): Flow<Subject>
 }
