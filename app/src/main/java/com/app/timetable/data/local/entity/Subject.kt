@@ -10,6 +10,6 @@ data class Subject (
     val priority: Float,
     val color: String,
     val remainingTime: Long,
-    val totalStudyHours: Float,
+    val totalStudyHours: Long,
     val deadline: Long
 )
