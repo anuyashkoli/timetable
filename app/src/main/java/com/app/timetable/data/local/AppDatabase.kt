@@ -5,11 +5,12 @@ import androidx.room.RoomDatabase
 import com.app.timetable.data.local.dao.SubjectDao
 import com.app.timetable.data.local.entity.Subject
 import com.app.timetable.data.local.entity.Task
+import com.app.timetable.data.local.entity.WorkSession
 import com.app.timetable.data.local.dao.TaskDao
 import com.app.timetable.data.local.dao.WorkSessionDao
 
 @Database (
-    entities = [Subject::class,Task::class],
+    entities = [Subject::class,Task::class, WorkSession::class],
     version = 1,
     exportSchema = false
 )
