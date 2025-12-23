@@ -6,6 +6,7 @@ import com.app.timetable.data.local.dao.SubjectDao
 import com.app.timetable.data.local.entity.Subject
 import com.app.timetable.data.local.entity.Task
 import com.app.timetable.data.local.dao.TaskDao
+import com.app.timetable.data.local.dao.WorkSessionDao
 
 @Database (
     entities = [Subject::class,Task::class],
@@ -16,4 +17,5 @@ import com.app.timetable.data.local.dao.TaskDao
 abstract class AppDatabase : RoomDatabase() {
   abstract fun taskDao(): TaskDao
   abstract fun subjectDao(): SubjectDao
+  abstract fun workSessionDao(): WorkSessionDao
 }
