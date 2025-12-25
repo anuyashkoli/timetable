@@ -30,7 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +50,7 @@ fun HomeScreen(
     onAddTaskClick: () -> Unit // Callback for navigation later
 ) {
     // Collect the sorted tasks from the ViewModel
-    val tasks by viewModel.tasks.collectAsState()
+    val tasks by viewModel.tasks.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
