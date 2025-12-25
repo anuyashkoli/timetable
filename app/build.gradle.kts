@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -44,6 +45,13 @@ android {
     }
 }
 
+// --- FIX #1: Force the correct JavaPoet version to fix the "canonicalName" crash ---
+configurations.all {
+    resolutionStrategy {
+        force("com.squareup:javapoet:1.13.0")
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -53,8 +61,25 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // Room libraries
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
+
+    // --- FIX #2: Add the Room Compiler (You must update libs.versions.toml too) ---
+    // If you haven't updated libs.versions.toml yet, use the manual string below:
+    ksp(libs.androidx.room.compiler)
+    // OR if you updated toml: ksp(libs.androidx.room.compiler)
+
+    // Hilt libraries
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // Other utils
+    implementation(libs.androidx.compose.material.icons.extended)
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -62,8 +87,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.androidx.compose.material.icons.extended)
 }
