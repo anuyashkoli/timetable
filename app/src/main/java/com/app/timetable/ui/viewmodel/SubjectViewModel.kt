@@ -9,11 +9,21 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class SubjectViewModel @Inject constructor(
     private val repository: TimetableRepository
 ) : ViewModel() {
+
+    val subjects: StateFlow<List<Subject>> = repository.getAllSubjects()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun saveSubject(
         name: String,
@@ -42,6 +52,12 @@ class SubjectViewModel @Inject constructor(
 
             repository.insertSubject(newSubject)
             onSuccess()
+        }
+    }
+
+    fun deleteSubject(subject: Subject) {
+        viewModelScope.launch {
+            repository.deleteSubject(subject)
         }
     }
 }
