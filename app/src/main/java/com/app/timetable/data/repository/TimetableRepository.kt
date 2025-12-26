@@ -63,6 +63,11 @@ class TimetableRepository(
         workSessionDao.upsertWorkSession(session)
     }
 
+    suspend fun deleteWorkSession(session: WorkSession) {
+        workSessionDao.deleteWorkSession(session)
+    }
+
+
     // ----------------------
     // ALGORITHM
     // ----------------------
