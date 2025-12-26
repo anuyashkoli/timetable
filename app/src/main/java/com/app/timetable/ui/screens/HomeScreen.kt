@@ -226,7 +226,7 @@ fun TaskItem(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth() // Add click here 👇
+            .fillMaxWidth()
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
