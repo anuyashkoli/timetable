@@ -28,15 +28,33 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun AddTaskScreen(
     viewModel: AddTaskViewModel = hiltViewModel(),
+    taskId: Int = -1, // -1 means "New Task"
     onBackClick: () -> Unit
 ) {
     val subjects by viewModel.subjects.collectAsState()
+    val taskToEdit by viewModel.taskState.collectAsState()
+
+    // Loads task data when screen opens
+    LaunchedEffect(taskId) {
+        viewModel.loadTask(taskId)
+    }
 
     // Form State
     var title by remember { mutableStateOf("") }
     var selectedSubject by remember { mutableStateOf<Subject?>(null) }
     var priority by remember { mutableIntStateOf(3) } // Default Medium
     var deadline by remember { mutableLongStateOf(System.currentTimeMillis() + 86400000) } // Default +1 day
+
+    // When taskToEdit loads, fill the form
+    LaunchedEffect(taskToEdit) {
+        taskToEdit?.let { task ->
+            title = task.title
+            priority = task.priority
+            deadline = task.deadline
+            // Find the subject object that matches the ID
+            selectedSubject = subjects.find { it.subjectID == task.subjectID }
+        }
+    }
 
     // Dropdown State
     var isSubjectExpanded by remember { mutableStateOf(false) }
@@ -138,6 +156,87 @@ fun AddTaskScreen(
                 enabled = title.isNotBlank()
             ) {
                 Text("Save Task")
+            }
+
+            // 1. Task Title
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("Task Title") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // 2. Subject Dropdown (Keep existing code)
+            ExposedDropdownMenuBox(
+                expanded = isSubjectExpanded,
+                onExpandedChange = { isSubjectExpanded = !isSubjectExpanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedSubject?.name ?: "Select Subject (Optional)",
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSubjectExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = isSubjectExpanded,
+                    onDismissRequest = { isSubjectExpanded = false }
+                ) {
+                    if (subjects.isEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text("No subjects found. Create one first!") },
+                            onClick = { isSubjectExpanded = false }
+                        )
+                    } else {
+                        subjects.forEach { subject ->
+                            DropdownMenuItem(
+                                text = { Text(subject.name) },
+                                onClick = {
+                                    selectedSubject = subject
+                                    isSubjectExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 3. Priority (Keep existing code)
+            Text("Priority", style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                (1..5).forEach { p ->
+                    FilterChip(
+                        selected = priority == p,
+                        onClick = { priority = p },
+                        label = { Text(getPriorityLabel(p)) }
+                    )
+                }
+            }
+
+            // 4. Deadline (Keep existing code)
+            DateTimePickerField(
+                timestamp = deadline,
+                onDateSelected = { deadline = it }
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // 5. Save Button (UPDATED)
+            Button(
+                onClick = {
+                    viewModel.saveTask(
+                        id = if (taskId == -1) 0 else taskId, // Pass ID to update
+                        title = title,
+                        subjectId = selectedSubject?.subjectID ?: 0,
+                        priority = priority,
+                        deadline = deadline,
+                        onSuccess = onBackClick
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = title.isNotBlank()
+            ) {
+                Text(if (taskId == -1) "Save Task" else "Update Task")
             }
         }
     }
