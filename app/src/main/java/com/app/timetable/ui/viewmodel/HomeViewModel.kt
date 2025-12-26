@@ -3,24 +3,84 @@ package com.app.timetable.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.timetable.data.local.entity.Task
+import com.app.timetable.data.local.entity.WorkSession
 import com.app.timetable.data.repository.TimetableRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.util.Calendar
 
+data class HomeUiState(
+    val tasks: List<Task> = emptyList(),
+    val currentSession: WorkSession? = null,
+    val nextSession: WorkSession? = null,
+    val recommendedTask: Task? = null,
+    val isStudyTime: Boolean = false
+)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: TimetableRepository
 ) : ViewModel() {
 
-    /**
-     * A "Hot" Flow that holds the list of tasks.
-     * It is automatically sorted by the logic in the Repository.
-     * 'stateIn' converts the Flow to a StateFlow, which is efficient for Compose.
-     */
+    private val _tasks = repository.getSortedTasks()
+    private val _sessions = repository.getAllSessions()
+
+    private val _ticker = flow {
+        while (true) {
+            emit(System.currentTimeMillis())
+            delay(60000) // Update every minute
+        }
+    }
+
+    val uiState: StateFlow<HomeUiState> = combine(_tasks, _sessions, _ticker) { tasks, sessions, _ ->
+        calculateRecommendation(tasks, sessions)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = HomeUiState()
+    )
+
+    private fun calculateRecommendation(tasks: List<Task>, sessions: List<WorkSession>): HomeUiState {
+        val calendar = Calendar.getInstance()
+        val currentDay = calendar.get(Calendar.DAY_OF_WEEK)
+
+        // Calculate minutes from midnight (e.g., 10:30 AM = 10*60 + 30 = 630 min)
+        // Note: Your WorkSessions store millis, so we compare millis.
+        // We need "Millis from start of day" for current time.
+        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val currentMinute = calendar.get(Calendar.MINUTE)
+        val currentMillisOfDay = (currentHour * 3600000L) + (currentMinute * 60000L)
+
+        // A. Check if we are currently in a session
+        val activeSession = sessions.find { session ->
+            session.dayOfWeek == currentDay &&
+                    currentMillisOfDay >= session.startTime &&
+                    currentMillisOfDay < session.endTime
+        }
+
+        // B. Find the next upcoming session (Today)
+        // If needed, you can expand this logic to check "Tomorrow" if null
+        val nextSession = sessions.filter { session ->
+            session.dayOfWeek == currentDay && session.startTime > currentMillisOfDay
+        }.minByOrNull { it.startTime }
+
+        // C. Pick best task (First uncompleted task)
+        val bestTask = tasks.firstOrNull { !it.isCompleted }
+
+        return HomeUiState(
+            tasks = tasks,
+            currentSession = activeSession,
+            nextSession = nextSession,
+            recommendedTask = bestTask,
+            isStudyTime = activeSession != null
+        )
+    }
     val tasks: StateFlow<List<Task>> = repository.getSortedTasks()
         .stateIn(
             scope = viewModelScope,
