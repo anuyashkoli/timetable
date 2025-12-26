@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -18,11 +19,6 @@ import com.app.timetable.data.local.entity.Subject
 import com.app.timetable.ui.viewmodel.AddTaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +58,7 @@ fun AddTaskScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Task") },
+                title = { Text(if (taskId == -1) "New Task" else "Edit Task") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -141,87 +137,7 @@ fun AddTaskScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // 5. Save Button
-            Button(
-                onClick = {
-                    viewModel.saveTask(
-                        title = title,
-                        subjectId = selectedSubject?.subjectID ?: 0, // 0 if no subject
-                        priority = priority,
-                        deadline = deadline,
-                        onSuccess = onBackClick
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = title.isNotBlank()
-            ) {
-                Text("Save Task")
-            }
-
-            // 1. Task Title
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Task Title") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            // 2. Subject Dropdown (Keep existing code)
-            ExposedDropdownMenuBox(
-                expanded = isSubjectExpanded,
-                onExpandedChange = { isSubjectExpanded = !isSubjectExpanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedSubject?.name ?: "Select Subject (Optional)",
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSubjectExpanded) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = isSubjectExpanded,
-                    onDismissRequest = { isSubjectExpanded = false }
-                ) {
-                    if (subjects.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("No subjects found. Create one first!") },
-                            onClick = { isSubjectExpanded = false }
-                        )
-                    } else {
-                        subjects.forEach { subject ->
-                            DropdownMenuItem(
-                                text = { Text(subject.name) },
-                                onClick = {
-                                    selectedSubject = subject
-                                    isSubjectExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 3. Priority (Keep existing code)
-            Text("Priority", style = MaterialTheme.typography.titleSmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                (1..5).forEach { p ->
-                    FilterChip(
-                        selected = priority == p,
-                        onClick = { priority = p },
-                        label = { Text(getPriorityLabel(p)) }
-                    )
-                }
-            }
-
-            // 4. Deadline (Keep existing code)
-            DateTimePickerField(
-                timestamp = deadline,
-                onDateSelected = { deadline = it }
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // 5. Save Button (UPDATED)
+            // 5. Save/Update Button
             Button(
                 onClick = {
                     viewModel.saveTask(
@@ -248,33 +164,26 @@ fun DateTimePickerField(timestamp: Long, onDateSelected: (Long) -> Unit) {
     val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
     val sdf = SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault())
 
-    // Overlay transparent box to capture clicks since TextField is readOnly
-    Text(
-        text = "Select Date & Time",
-        modifier = Modifier
-            .clickable {
-                showDateTimePicker(context, calendar) { newTime ->
-                    onDateSelected(newTime)
-                }
-            }
-            .padding(16.dp) // Clickable area includes the padding
-    )
+    Box(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = sdf.format(Date(timestamp)),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Deadline") },
+            trailingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth()
+        )
 
-    OutlinedTextField(
-        value = sdf.format(Date(timestamp)),
-        onValueChange = {},
-        readOnly = true,
-        label = { Text("Deadline") },
-        trailingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                showDateTimePicker(context, calendar) { newTime ->
-                    onDateSelected(newTime)
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable {
+                    showDateTimePicker(context, calendar) { newTime ->
+                        onDateSelected(newTime)
+                    }
                 }
-            }
-    )
-
+        )
+    }
 }
 
 // Helper to show DatePicker then TimePicker
@@ -303,7 +212,7 @@ fun showDateTimePicker(context: Context, startCalendar: Calendar, onDateTimePick
 fun getPriorityLabel(p: Int): String = when(p) {
     1 -> "High"
     2 -> "M-High"
-    3 -> "Medium"
+    3 -> "Med"
     4 -> "Low"
     else -> "Min"
 }
