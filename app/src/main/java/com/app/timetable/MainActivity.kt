@@ -13,8 +13,10 @@ import androidx.navigation.compose.composable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.app.timetable.ui.screens.AddTaskScreen
 import com.app.timetable.ui.theme.TimetableTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,16 +47,26 @@ fun AppNavigation() {
         composable("home") {
             HomeScreen(
                 onAddTaskClick = { navController.navigate("add_task") },
+                onTaskClick = { taskId ->
+                    navController.navigate("add_task?taskId=$taskId") // Pass ID
+                },
                 onAddSubjectClick = { navController.navigate("add_subject") },
                 onSettingsClick = { navController.navigate("settings") }
             )
         }
-
-        composable("add_task") {
-            AddTaskScreen(
-                onBackClick = {
-                    navController.popBackStack()
+        composable(
+            route = "add_task?taskId={taskId}",
+            arguments = listOf(
+                navArgument("taskId") {
+                    type = NavType.IntType
+                    defaultValue = -1 // Default to -1 (New Task)
                 }
+            )
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
+            AddTaskScreen(
+                taskId = taskId,
+                onBackClick = { navController.popBackStack() }
             )
         }
 
