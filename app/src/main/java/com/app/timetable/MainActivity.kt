@@ -23,6 +23,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import com.app.timetable.ui.screens.HomeScreen
 import com.app.timetable.ui.screens.AddSubjectScreen
 import com.app.timetable.ui.screens.SettingsScreen
+import com.app.timetable.ui.screens.SubjectsListScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -50,7 +51,7 @@ fun AppNavigation() {
                 onTaskClick = { taskId ->
                     navController.navigate("add_task?taskId=$taskId") // Pass ID
                 },
-                onAddSubjectClick = { navController.navigate("add_subject") },
+                onAddSubjectClick = { navController.navigate("subjects_list") },
                 onSettingsClick = { navController.navigate("settings") }
             )
         }
@@ -70,15 +71,18 @@ fun AppNavigation() {
             )
         }
 
-        // Add Task Screen
-        composable("add_subject") {
-            AddSubjectScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                }
+        composable("subjects_list") {
+            SubjectsListScreen(
+                onAddSubjectClick = { navController.navigate("add_subject") },
+                onBackClick = { navController.popBackStack() }
             )
         }
 
+        composable("add_subject") {
+            AddSubjectScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
         composable("settings") {
             SettingsScreen(
                 onBackClick = { navController.popBackStack() }
