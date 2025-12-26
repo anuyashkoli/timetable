@@ -25,7 +25,28 @@ class AddTaskViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    private val _taskState = kotlinx.coroutines.flow.MutableStateFlow<Task?>(null)
+    val taskState: StateFlow<Task?> = _taskState
+
+    fun loadTask(taskId: Int) {
+        if (taskId == -1) {
+            _taskState.value = null // Reset for new task
+            return
+        }
+
+        viewModelScope.launch {
+            // We need a way to get a single task.
+            // Since we didn't add getTaskById in Repository yet, let's filter from all tasks (Quick fix)
+            // Or better: Add getTaskById to Repository (Recommended).
+            // For now, let's use the quick Flow approach to avoid changing Repository again immediately:
+            repository.getAllTasks().collect { tasks ->
+                _taskState.value = tasks.find { it.taskID == taskId }
+            }
+        }
+    }
+
     fun saveTask(
+        id: Int = 0, // Adding ID parameter (0 = new, >0 = update)
         title: String,
         subjectId: Int,
         priority: Int,
@@ -36,6 +57,7 @@ class AddTaskViewModel @Inject constructor(
 
         viewModelScope.launch {
             val newTask = Task(
+                taskID = id,
                 title = title,
                 subjectID = subjectId,
                 priority = priority,
