@@ -7,13 +7,19 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Text
+import androidx.navigation.compose.composable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import com.app.timetable.ui.screens.AddTaskScreen
 import com.app.timetable.ui.theme.TimetableTheme
 import dagger.hilt.android.AndroidEntryPoint
 import com.app.timetable.ui.screens.HomeScreen
+import com.app.timetable.ui.screens.AddSubjectScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -22,28 +28,41 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TimetableTheme {
-                HomeScreen(
-                    onAddTaskClick = {
-                        // TODO: Navigate to AddTaskScreen
-                    }
-                )
+                AppNavigation()
             }
         }
     }
+}
 
-    @Composable
-    fun Greeting(name: String, modifier: Modifier = Modifier) {
-        Text(
-            text = "Hello $name!",
-            modifier = modifier
-        )
-    }
+@Composable
+fun AppNavigation() {
+    val navController = rememberNavController()
 
-    @Preview(showBackground = true)
-    @Composable
-    fun GreetingPreview() {
-        TimetableTheme {
-            Greeting("Android")
+    NavHost(navController = navController, startDestination = "home") {
+
+        // Home Screen
+        composable("home") {
+            HomeScreen(
+                onAddTaskClick = { navController.navigate("add_task") },
+                onAddSubjectClick = { navController.navigate("add_subject") } // <--- Add this
+            )
+        }
+
+        composable("add_task") {
+            AddTaskScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // Add Task Screen
+        composable("add_subject") {
+            AddSubjectScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
