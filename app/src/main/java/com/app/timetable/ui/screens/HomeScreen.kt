@@ -1,5 +1,6 @@
 package com.app.timetable.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,16 +46,24 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
+import com.app.timetable.ui.viewmodel.HomeUiState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onAddTaskClick: () -> Unit, // Callback for navigation later
+    onTaskClick: (Int) -> Unit,
     onAddSubjectClick: () -> Unit,
     onSettingsClick: () -> Unit // <--- ADD THIS
 ) {
     // Collect the sorted tasks from the ViewModel
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+
+    // Collecting new UI State
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -92,32 +101,41 @@ fun HomeScreen(
         }
     ) { innerPadding ->
 
-        if (tasks.isEmpty()) {
-            // Empty State
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 2. The Smart Dashboard Card (Always at the top)
+            item {
+                DashboardCard(state)
+            }
+
+            item {
                 Text(
-                    text = "No tasks yet. \nTap + to add one!",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Gray
+                    "Your Tasks",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
             }
-        } else {
-            // List of Tasks
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(tasks, key = { it.taskID }) { task ->
+
+            // 3. The Task List
+            if (state.tasks.isEmpty()) {
+                item {
+                    Text(
+                        text = "No tasks yet. Relax!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                }
+            } else {
+                items(state.tasks, key = { it.taskID }) { task ->
                     TaskItem(
                         task = task,
+                        onClick = { onTaskClick(task.taskID) },
                         onCheckedChange = { isChecked ->
                             viewModel.onTaskCheckedChange(task, isChecked)
                         },
@@ -132,12 +150,84 @@ fun HomeScreen(
 }
 
 @Composable
+fun DashboardCard(state: HomeUiState) {
+    // Dynamic Color: Green if studying, Blue if free
+    val cardColor = if (state.isStudyTime) Color(0xFFC8E6C9) else Color(0xFFBBDEFB)
+    val textColor = if (state.isStudyTime) Color(0xFF1B5E20) else Color(0xFF0D47A1)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Header Row
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Star, contentDescription = null, tint = textColor)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (state.isStudyTime) "It's Study Time!" else "You are Free",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
+            }
+
+            // Subtext: Recommendation
+            if (state.isStudyTime) {
+                if (state.recommendedTask != null) {
+                    Text(
+                        text = "Recommended Task:",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = textColor.copy(alpha = 0.8f)
+                    )
+                    Text(
+                        text = state.recommendedTask.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = textColor
+                    )
+                    Text(
+                        text = "Due: ${formatDeadline(state.recommendedTask.deadline)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textColor
+                    )
+                } else {
+                    Text("You have a study slot, but no pending tasks! Great job.", color = textColor)
+                }
+            } else {
+                // Free Time Logic
+                if (state.nextSession != null) {
+                    Text(
+                        "Next study session starts at ${formatTime(state.nextSession.startTime)}.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = textColor
+                    )
+                } else {
+                    Text(
+                        "No more sessions scheduled for today.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = textColor
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun TaskItem(
     task: Task,
+    onClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
     onDeleteClick: () -> Unit
 ) {
     Card(
+        modifier = Modifier
+            .fillMaxWidth() // Add click here 👇
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (task.isCompleted) Color(0xFFE0E0E0) else MaterialTheme.colorScheme.surface
