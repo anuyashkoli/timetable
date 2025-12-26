@@ -44,13 +44,14 @@ import com.app.timetable.ui.viewmodel.HomeViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
+import androidx.compose.material.icons.filled.Settings
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onAddTaskClick: () -> Unit, // Callback for navigation later
-    onAddSubjectClick: () -> Unit
+    onAddSubjectClick: () -> Unit,
+    onSettingsClick: () -> Unit // <--- ADD THIS
 ) {
     // Collect the sorted tasks from the ViewModel
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
@@ -59,6 +60,11 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Smart Timetable") },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
