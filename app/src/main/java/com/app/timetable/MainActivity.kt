@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Text
+import com.app.timetable.ui.screens.StatsScreen
 import androidx.navigation.compose.composable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -55,8 +56,9 @@ fun AppNavigation() {
                 onAddSubjectClick = { navController.navigate("subjects_list") },
                 onSettingsClick = { navController.navigate("settings") },
                 onStartTaskClick = { taskId ->
-                    navController.navigate("timer?taskId=$taskId") // Navigate to Timer
-                }
+                    navController.navigate("timer?taskId=$taskId")
+                },
+                onStatsClick = { navController.navigate("stats") }
             )
         }
         composable(
@@ -103,5 +105,12 @@ fun AppNavigation() {
                 onBackClick = { navController.popBackStack() }
             )
         }
+
+        composable("stats") {
+            StatsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
     }
 }

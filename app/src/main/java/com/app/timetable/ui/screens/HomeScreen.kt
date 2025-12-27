@@ -17,8 +17,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -59,7 +61,8 @@ fun HomeScreen(
     onTaskClick: (Int) -> Unit,
     onAddSubjectClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onStartTaskClick: (Int) -> Unit
+    onStartTaskClick: (Int) -> Unit,
+    onStatsClick: () -> Unit
 ) {
     // Collect the sorted tasks from the ViewModel
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
@@ -72,6 +75,10 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("Smart Timetable") },
                 actions = {
+                    IconButton(onClick = onStatsClick) {
+                        // Using 'DateRange' as a placeholder for "Reports/Stats"
+                        Icon(Icons.Default.DateRange, contentDescription = "Statistics")
+                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
