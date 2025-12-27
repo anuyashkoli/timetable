@@ -6,6 +6,8 @@ import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
@@ -14,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.timetable.data.local.entity.Subject
 import com.app.timetable.ui.viewmodel.AddTaskViewModel
 import java.text.SimpleDateFormat
@@ -92,8 +93,8 @@ fun AddTaskScreen(
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSubjectExpanded) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
-                )
+                    modifier = Modifier.fillMaxWidth()
+                        .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true)                )
                 ExposedDropdownMenu(
                     expanded = isSubjectExpanded,
                     onDismissRequest = { isSubjectExpanded = false }
