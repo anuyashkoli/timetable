@@ -11,10 +11,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.content.Context
+import com.app.timetable.utils.AlarmScheduler
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: TimetableRepository
+    private val repository: TimetableRepository,
+    @ApplicationContext private val context: Context // Inject Context
 ) : ViewModel() {
 
     // Load existing sessions
@@ -46,6 +50,10 @@ class SettingsViewModel @Inject constructor(
                 endTime = endMillis
             )
             repository.insertSession(session)
+
+            // Scheduling Notification
+            val scheduler = AlarmScheduler(context)
+            scheduler.scheduleSession(dayOfWeek, startHour, startMinute)
         }
     }
 
