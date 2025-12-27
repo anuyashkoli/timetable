@@ -2,13 +2,16 @@ package com.app.timetable.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.util.copy
 import com.app.timetable.data.local.entity.Task
+import com.app.timetable.data.local.entity.Subject
 import com.app.timetable.data.repository.TimetableRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,7 +35,7 @@ class TimerViewModel @Inject constructor(
     val totalTime = _totalTime.asStateFlow()
 
     private var timerJob: Job? = null
-    private var accumulatedStudyTime = 0L // Track how long user actually studied in this session
+    private var sessionStudyTime = 0L // Track how long user actually studied in this session
 
     fun loadTask(taskId: Int) {
         viewModelScope.launch {
@@ -63,7 +66,7 @@ class TimerViewModel @Inject constructor(
             while (_currentTime.value > 0) {
                 delay(1000)
                 _currentTime.value -= 1000
-                accumulatedStudyTime += 1000
+                sessionStudyTime += 1000
             }
             _isPlaying.value = false
             // Optional: Auto-finish when timer hits 0
@@ -84,18 +87,30 @@ class TimerViewModel @Inject constructor(
             repository.insertTask(currentTask.copy(isCompleted = true))
 
             // 2. Update Subject Statistics
-            if (currentTask.subjectID != 0) {
-                // We need to fetch the subject, update it, and save it.
-                // Note: ideally we'd have a getSubjectById in Repository,
-                // but we can assume we can fetch it or skip for this specific demo step.
-                // Let's implement a simple fetch from the list flow for now:
+            if (currentTask.subjectID != 0 && sessionStudyTime > 0) {
+                try {
+                    // Use 'first()' to get the current list just once
+                    val allSubjects = repository.getAllSubjects().first()
+                    val subject = allSubjects.find { it.subjectID == currentTask.subjectID }
 
-                // Real-world: repository.getSubjectById(id)
-                // Here: we rely on the fact that we need to implement logic to update the subject stats.
-                // Since `getAllSubjects` returns a Flow, collecting it here once is a bit tricky.
-                // For this "First Project", let's just mark the Task done.
-                // We can add the Subject Stat update if you want to go deeper!
+                    if (subject != null) {
+                        val newStudied = subject.studiedTime + sessionStudyTime
+                        val newRemaining = (subject.goalTime - newStudied).coerceAtLeast(0L)
+
+                        val updatedSubject = subject.copy(
+                            studiedTime = newStudied,
+                            remainingTime = newRemaining
+                        )
+                        repository.insertSubject(updatedSubject)
+                    }
+                } catch (e: Exception) {
+                    // Handle empty flow or errors
+                    e.printStackTrace()
+                }
             }
+
+            // 3. Reset session tracker
+            sessionStudyTime = 0L
 
             onComplete()
         }
