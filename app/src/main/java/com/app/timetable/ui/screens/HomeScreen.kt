@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -57,7 +58,8 @@ fun HomeScreen(
     onAddTaskClick: () -> Unit, // Callback for navigation later
     onTaskClick: (Int) -> Unit,
     onAddSubjectClick: () -> Unit,
-    onSettingsClick: () -> Unit // <--- ADD THIS
+    onSettingsClick: () -> Unit,
+    onStartTaskClick: (Int) -> Unit
 ) {
     // Collect the sorted tasks from the ViewModel
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
@@ -141,7 +143,8 @@ fun HomeScreen(
                         },
                         onDeleteClick = {
                             viewModel.deleteTask(task)
-                        }
+                        },
+                        onStartClick = { onStartTaskClick(task.taskID) }
                     )
                 }
             }
@@ -222,7 +225,8 @@ fun TaskItem(
     task: Task,
     onClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onStartClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -268,6 +272,18 @@ fun TaskItem(
                         text = "Due: ${formatDeadline(task.deadline)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.outline
+                    )
+                }
+            }
+
+            // ACTIONS ROW
+            Row {
+                // Play Button
+                IconButton(onClick = onStartClick) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Start Timer",
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
