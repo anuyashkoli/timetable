@@ -1,5 +1,6 @@
 package com.app.timetable.ui.viewmodel
 
+import androidx.compose.remote.creation.first
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.timetable.data.local.entity.Task
@@ -10,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -94,8 +96,40 @@ class HomeViewModel @Inject constructor(
      */
     fun onTaskCheckedChange(task: Task, isCompleted: Boolean) {
         viewModelScope.launch {
-            val updatedTask = task.copy(isCompleted = isCompleted)
-            repository.insertTask(updatedTask)
+            // 1. Update the Task status
+            repository.insertTask(task.copy(isCompleted = isCompleted))
+
+            // 2. Update the Subject Progress
+            if (task.subjectID != 0) {
+                try {
+                    // Get current subjects list
+                    val allSubjects = repository.getAllSubjects().first()
+                    val subject = allSubjects.find { it.subjectID == task.subjectID }
+
+                    if (subject != null) {
+                        // Calculate duration in millis (Default 60 mins -> 3,600,000 ms)
+                        val taskDurationMillis = if (task.duration > 0) task.duration * 60000L else 3600000L
+
+                        // If Checking -> Add Time. If Unchecking -> Remove Time.
+                        val newStudied = if (isCompleted) {
+                            subject.studiedTime + taskDurationMillis
+                        } else {
+                            (subject.studiedTime - taskDurationMillis).coerceAtLeast(0L)
+                        }
+
+                        // Recalculate remaining
+                        val newRemaining = (subject.goalTime - newStudied).coerceAtLeast(0L)
+
+                        // Save Subject
+                        repository.insertSubject(subject.copy(
+                            studiedTime = newStudied,
+                            remainingTime = newRemaining
+                        ))
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         }
     }
 
