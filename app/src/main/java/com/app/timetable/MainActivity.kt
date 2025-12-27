@@ -24,6 +24,7 @@ import com.app.timetable.ui.screens.HomeScreen
 import com.app.timetable.ui.screens.AddSubjectScreen
 import com.app.timetable.ui.screens.SettingsScreen
 import com.app.timetable.ui.screens.SubjectsListScreen
+import com.app.timetable.ui.screens.TimerScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -52,7 +53,10 @@ fun AppNavigation() {
                     navController.navigate("add_task?taskId=$taskId") // Pass ID
                 },
                 onAddSubjectClick = { navController.navigate("subjects_list") },
-                onSettingsClick = { navController.navigate("settings") }
+                onSettingsClick = { navController.navigate("settings") },
+                onStartTaskClick = { taskId ->
+                    navController.navigate("timer?taskId=$taskId") // Navigate to Timer
+                }
             )
         }
         composable(
@@ -85,6 +89,17 @@ fun AppNavigation() {
         }
         composable("settings") {
             SettingsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "timer?taskId={taskId}",
+            arguments = listOf(navArgument("taskId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getInt("taskId") ?: -1
+            TimerScreen(
+                taskId = taskId,
                 onBackClick = { navController.popBackStack() }
             )
         }
