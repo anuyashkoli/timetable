@@ -1,6 +1,7 @@
 package com.app.timetable.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,12 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.app.timetable.data.local.entity.Subject
 import com.app.timetable.ui.viewmodel.SubjectViewModel
+import androidx.core.graphics.toColorInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubjectsListScreen(
     viewModel: SubjectViewModel = hiltViewModel(),
     onAddSubjectClick: () -> Unit,
+    onEditSubjectClick: (Int) -> Unit,
     onBackClick: () -> Unit
 ) {
     val subjects by viewModel.subjects.collectAsState()
@@ -68,6 +71,7 @@ fun SubjectsListScreen(
                 items(subjects) { subject ->
                     SubjectItem(
                         subject = subject,
+                        onClick = { onEditSubjectClick(subject.subjectID) },
                         onDeleteClick = { viewModel.deleteSubject(subject) }
                     )
                 }
@@ -77,10 +81,10 @@ fun SubjectsListScreen(
 }
 
 @Composable
-fun SubjectItem(subject: Subject, onDeleteClick: () -> Unit) {
+fun SubjectItem(subject: Subject, onClick: () -> Unit, onDeleteClick: () -> Unit) {
     // 1. Parse Color
     val color = try {
-        Color(android.graphics.Color.parseColor(subject.color))
+        Color(subject.color.toColorInt())
     } catch (e: Exception) {
         MaterialTheme.colorScheme.primary
     }
@@ -97,6 +101,7 @@ fun SubjectItem(subject: Subject, onDeleteClick: () -> Unit) {
     }
 
     Card(
+        modifier = Modifier.clickable { onClick() },
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {

@@ -80,15 +80,29 @@ fun AppNavigation() {
         composable("subjects_list") {
             SubjectsListScreen(
                 onAddSubjectClick = { navController.navigate("add_subject") },
+                onEditSubjectClick = { id ->
+                    navController.navigate("add_subject?subjectId=$id")
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
 
-        composable("add_subject") {
+        composable(
+            route = "add_subject?subjectId={subjectId}",
+            arguments = listOf(
+                navArgument("subjectId") {
+                    type = NavType.IntType
+                    defaultValue = -1
+                }
+            )
+        ) { backStackEntry ->
+            val subjectId = backStackEntry.arguments?.getInt("subjectId") ?: -1
             AddSubjectScreen(
+                subjectId = subjectId,
                 onBackClick = { navController.popBackStack() }
             )
         }
+
         composable("settings") {
             SettingsScreen(
                 onBackClick = { navController.popBackStack() }
