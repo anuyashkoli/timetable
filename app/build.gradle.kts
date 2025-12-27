@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.compose.remote.creation.core)
 
     // --- FIX #2: Add the Room Compiler (You must update libs.versions.toml too) ---
     // If you haven't updated libs.versions.toml yet, use the manual string below:
